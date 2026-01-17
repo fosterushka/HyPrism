@@ -5,6 +5,7 @@ import (
 	"os"
 	"path/filepath"
 	"runtime"
+	"strings"
 )
 
 // GetDefaultAppDir returns the default application directory
@@ -167,6 +168,15 @@ func IsVersionInstalled(branch string, version int) bool {
 	// Game is installed to the legacy path: release/package/game/latest
 	// This matches where InstallGame and Launch actually use
 	gameDir := filepath.Join(GetDefaultAppDir(), "release", "package", "game", "latest")
+	
+	// First check if version.txt exists and has a valid version
+	versionFile := filepath.Join(GetDefaultAppDir(), "version.txt")
+	if data, err := os.ReadFile(versionFile); err == nil {
+		versionStr := strings.TrimSpace(string(data))
+		if versionStr != "" && versionStr != "0" {
+			return true
+		}
+	}
 	
 	// Check if the game directory exists
 	if _, err := os.Stat(gameDir); os.IsNotExist(err) {
