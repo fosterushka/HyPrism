@@ -469,49 +469,6 @@ export namespace news {
 
 }
 
-export namespace skin {
-	
-	export class AvatarPreset {
-	    bodyCharacteristic?: string;
-	    face?: string;
-	    eyes?: string;
-	    haircut?: string;
-	    facialHair?: string;
-	    eyebrows?: string;
-	    undertop?: string;
-	    overtop?: string;
-	    pants?: string;
-	    shoes?: string;
-	    headAccessory?: string;
-	    faceAccessory?: string;
-	    gloves?: string;
-	    cape?: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new AvatarPreset(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.bodyCharacteristic = source["bodyCharacteristic"];
-	        this.face = source["face"];
-	        this.eyes = source["eyes"];
-	        this.haircut = source["haircut"];
-	        this.facialHair = source["facialHair"];
-	        this.eyebrows = source["eyebrows"];
-	        this.undertop = source["undertop"];
-	        this.overtop = source["overtop"];
-	        this.pants = source["pants"];
-	        this.shoes = source["shoes"];
-	        this.headAccessory = source["headAccessory"];
-	        this.faceAccessory = source["faceAccessory"];
-	        this.gloves = source["gloves"];
-	        this.cape = source["cape"];
-	    }
-	}
-
-}
-
 export namespace updater {
 	
 	export class Asset {
@@ -526,43 +483,6 @@ export namespace updater {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.url = source["url"];
 	        this.sha256 = source["sha256"];
-	    }
-	}
-
-}
-
-export namespace worlds {
-	
-	export class World {
-	    id: string;
-	    name: string;
-	    path: string;
-	    createdAt: string;
-	    lastPlayed: string;
-	    sizeBytes: number;
-	    gameMode: string;
-	    seed?: string;
-	    isBackup: boolean;
-	    backupOf?: string;
-	    thumbnailUrl?: string;
-	
-	    static createFrom(source: any = {}) {
-	        return new World(source);
-	    }
-	
-	    constructor(source: any = {}) {
-	        if ('string' === typeof source) source = JSON.parse(source);
-	        this.id = source["id"];
-	        this.name = source["name"];
-	        this.path = source["path"];
-	        this.createdAt = source["createdAt"];
-	        this.lastPlayed = source["lastPlayed"];
-	        this.sizeBytes = source["sizeBytes"];
-	        this.gameMode = source["gameMode"];
-	        this.seed = source["seed"];
-	        this.isBackup = source["isBackup"];
-	        this.backupOf = source["backupOf"];
-	        this.thumbnailUrl = source["thumbnailUrl"];
 	    }
 	}
 

@@ -82,11 +82,6 @@ func CheckUpdate(ctx context.Context, current string) (*Asset, string, error) {
 	return asset, info.Version, nil
 }
 
-// GetHelperAsset is deprecated - updates now use built-in scripts
-func GetHelperAsset(ctx context.Context) (*Asset, error) {
-	return nil, fmt.Errorf("helper-based updates are no longer used")
-}
-
 func fetchUpdateInfo(ctx context.Context) (*UpdateInfo, error) {
 	tmpFile, err := os.CreateTemp("", "version-*.json")
 	if err != nil {

@@ -15,8 +15,6 @@ import (
 	"HyPrism/internal/mods"
 	"HyPrism/internal/news"
 	"HyPrism/internal/pwr"
-	"HyPrism/internal/skin"
-	"HyPrism/internal/worlds"
 
 	wailsRuntime "github.com/wailsapp/wails/v2/pkg/runtime"
 )
@@ -162,28 +160,6 @@ func (a *App) GetLogs() (string, error) {
 	return string(data), nil
 }
 
-// GetSkinPreset returns the current skin preset
-func (a *App) GetSkinPreset() (*skin.AvatarPreset, error) {
-	gameDir := filepath.Join(env.GetDefaultAppDir(), "release", "package", "game", "latest")
-	return skin.LoadPreset(gameDir)
-}
-
-// SaveSkinPreset saves a skin preset
-func (a *App) SaveSkinPreset(preset skin.AvatarPreset) error {
-	gameDir := filepath.Join(env.GetDefaultAppDir(), "release", "package", "game", "latest")
-	return skin.SavePreset(gameDir, &preset)
-}
-
-// GetCosmeticCategories returns all available cosmetic categories
-func (a *App) GetCosmeticCategories() map[string][]skin.CosmeticItem {
-	return skin.GetAllCosmetics()
-}
-
-// GetAvailableColors returns available colors for cosmetics
-func (a *App) GetAvailableColors() []string {
-	return skin.GetAvailableColors()
-}
-
 // ==================== MOD MANAGER ====================
 
 // SearchMods searches for mods on CurseForge
@@ -319,57 +295,6 @@ func (a *App) OpenInstanceModsFolder(branch string, version int) error {
 		return err
 	}
 	return openFolder(modsDir)
-}
-
-// ==================== WORLD MANAGER ====================
-
-// GetWorlds returns all worlds
-func (a *App) GetWorlds() ([]worlds.World, error) {
-	return worlds.ScanWorlds()
-}
-
-// GetWorld returns a specific world
-func (a *App) GetWorld(worldID string) (*worlds.World, error) {
-	return worlds.GetWorld(worldID)
-}
-
-// RenameWorld renames a world
-func (a *App) RenameWorld(worldID, newName string) error {
-	return worlds.RenameWorld(worldID, newName)
-}
-
-// DeleteWorld deletes a world
-func (a *App) DeleteWorld(worldID string) error {
-	return worlds.DeleteWorld(worldID)
-}
-
-// BackupWorld creates a backup of a world
-func (a *App) BackupWorld(worldID string) (*worlds.World, error) {
-	return worlds.BackupWorld(worldID)
-}
-
-// GetBackups returns all world backups
-func (a *App) GetBackups() ([]worlds.World, error) {
-	return worlds.GetBackups()
-}
-
-// RestoreBackup restores a backup
-func (a *App) RestoreBackup(backupID string) (*worlds.World, error) {
-	return worlds.RestoreBackup(backupID)
-}
-
-// DeleteBackup deletes a backup
-func (a *App) DeleteBackup(backupID string) error {
-	return worlds.DeleteBackup(backupID)
-}
-
-// OpenWorldsFolder opens the worlds folder in file explorer
-func (a *App) OpenWorldsFolder() error {
-	worldsDir := worlds.GetWorldsDir()
-	if err := os.MkdirAll(worldsDir, 0755); err != nil {
-		return err
-	}
-	return openFolder(worldsDir)
 }
 
 // ==================== UTILITY ====================
