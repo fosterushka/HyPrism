@@ -10,12 +10,12 @@ import { DeleteConfirmationModal } from './components/DeleteConfirmationModal';
 import { ModManager } from './components/ModManager';
 import hytaleLogo from './assets/logo.png';
 
-import { 
-  DownloadAndLaunch, 
-  OpenFolder, 
-  GetNick, 
-  SetNick, 
-  DeleteGame, 
+import {
+  DownloadAndLaunch,
+  OpenFolder,
+  GetNick,
+  SetNick,
+  DeleteGame,
   Update,
   ExitGame,
   IsGameRunning,
@@ -28,22 +28,24 @@ import {
   GetInstalledVersionsForBranch,
   CheckLatestNeedsUpdate,
   // Settings
-  SelectInstanceDirectory
+  SelectInstanceDirectory,
+  GetNews,
 } from '../wailsjs/go/app/App';
 import { EventsOn } from '../wailsjs/runtime/runtime';
+import { NewsPreview } from './components/NewsPreview';
 
 const App: React.FC = () => {
   // User state
   const [username, setUsername] = useState<string>("HyPrism");
   const [isEditing, setIsEditing] = useState<boolean>(false);
-  
+
   // Download state
   const [progress, setProgress] = useState<number>(0);
   const [isDownloading, setIsDownloading] = useState<boolean>(false);
   const [isGameRunning, setIsGameRunning] = useState<boolean>(false);
   const [downloaded, setDownloaded] = useState<number>(0);
   const [total, setTotal] = useState<number>(0);
-  
+
   // Update state
   const [updateAsset, setUpdateAsset] = useState<any>(null);
   const [isUpdatingLauncher, setIsUpdatingLauncher] = useState<boolean>(false);
@@ -114,11 +116,11 @@ const App: React.FC = () => {
       try {
         const versions = await GetVersionList(currentBranch);
         setAvailableVersions(versions || []);
-        
+
         // Load installed versions
         const installed = await GetInstalledVersionsForBranch(currentBranch);
         setInstalledVersions(installed || []);
-        
+
         // If current version is not valid for this branch, set to latest
         if (versions && !versions.includes(currentVersion) && versions.length > 0) {
           setCurrentVersion(versions[0]);
@@ -138,7 +140,7 @@ const App: React.FC = () => {
   const handleBranchChange = async (branch: string) => {
     setCurrentBranch(branch);
     await SetVersionType(branch);
-    
+
     // Load versions for new branch and set to latest (version 0)
     setIsLoadingVersions(true);
     try {
@@ -162,7 +164,7 @@ const App: React.FC = () => {
   // Game state polling
   useEffect(() => {
     if (!isGameRunning) return;
-    
+
     const pollInterval = setInterval(async () => {
       try {
         const running = await IsGameRunning();
@@ -174,7 +176,7 @@ const App: React.FC = () => {
         console.error('Failed to check game state:', e);
       }
     }, 3000); // Check every 3 seconds (reduced frequency)
-    
+
     return () => clearInterval(pollInterval);
   }, [isGameRunning]);
 
@@ -182,7 +184,7 @@ const App: React.FC = () => {
     // Initialize user settings
     GetNick().then((n: string) => n && setUsername(n));
     // GetCustomInstanceDir().then((dir: string) => setCustomInstanceDir(dir));
-    
+
     // Load saved branch and version - must load branch first, then version
     const loadSettings = async () => {
       try {
@@ -190,16 +192,16 @@ const App: React.FC = () => {
         const savedBranch = await GetVersionType();
         const branch = savedBranch || "release";
         setCurrentBranch(branch);
-        
+
         // Load version list for this branch
         setIsLoadingVersions(true);
         const versions = await GetVersionList(branch);
         setAvailableVersions(versions);
-        
+
         // Load installed versions
         const installed = await GetInstalledVersionsForBranch(branch);
         setInstalledVersions(installed);
-        
+
         // Always start with "latest" (version 0) when launcher opens
         setCurrentVersion(0);
         await SetSelectedVersion(0);
@@ -216,13 +218,13 @@ const App: React.FC = () => {
       setProgress(data.progress);
       setDownloaded(data.downloaded);
       setTotal(data.total);
-      
+
       // When launch stage is received, game is starting
       if (data.stage === 'launch') {
         setIsGameRunning(true);
         setIsDownloading(false);
         setProgress(0);
-        
+
         // Game is now installed, update state
         setIsVersionInstalled(true);
       }
@@ -256,7 +258,7 @@ const App: React.FC = () => {
     setIsUpdatingLauncher(true);
     setProgress(0);
     setUpdateStats({ d: 0, t: 0 });
-    
+
     try {
       await Update();
     } catch (err) {
@@ -281,7 +283,7 @@ const App: React.FC = () => {
       });
       return;
     }
-    
+
     setIsDownloading(true);
     try {
       await DownloadAndLaunch(username);
@@ -299,6 +301,7 @@ const App: React.FC = () => {
     await SetNick(newNick);
   };
 
+
   const handleExit = async () => {
     try {
       await ExitGame();
@@ -314,7 +317,7 @@ const App: React.FC = () => {
       const selectedDir = await SelectInstanceDirectory();
       if (selectedDir) {
         console.log('Instance directory updated to:', selectedDir);
-        
+
         // Show info about what gets moved
         setError({
           type: 'INFO',
@@ -322,20 +325,20 @@ const App: React.FC = () => {
           technical: `Game instances will now be stored in:\n${selectedDir}\n\nNote: The following remain in AppData:\n• Java Runtime (JRE)\n• Butler tool\n• Cache files\n• Logs\n• Launcher settings\n• WebView2 (EBWebView folder)\n\nYou may need to reinstall the game if switching drives.`,
           timestamp: new Date().toISOString()
         });
-        
+
         // Reload version list and check installed versions for new directory
         setIsLoadingVersions(true);
         try {
           const versions = await GetVersionList(currentBranch);
           setAvailableVersions(versions || []);
-          
+
           const installed = await GetInstalledVersionsForBranch(currentBranch);
           setInstalledVersions(installed || []);
-          
+
           // Re-check if current version is installed in new directory
           const isInstalled = await IsVersionInstalled(currentBranch, currentVersion);
           setIsVersionInstalled(isInstalled);
-          
+
           // Check if latest needs update
           if (currentVersion === 0) {
             const needsUpdate = await CheckLatestNeedsUpdate(currentBranch);
@@ -361,23 +364,27 @@ const App: React.FC = () => {
     <div className="relative w-screen h-screen bg-[#090909] text-white overflow-hidden font-sans select-none">
       <BackgroundImage />
       <Titlebar />
-      
+
       {/* Music Player - positioned in top right */}
       <div className="absolute top-12 right-4 z-20">
         <MusicPlayer forceMuted={isGameRunning} />
       </div>
-      
+
+      <div className='absolute z-20 top-32 w-full mx-auto'>
+        <NewsPreview getNews={async () => await GetNews(4)} />
+      </div>
+
       {isUpdatingLauncher && (
-        <UpdateOverlay 
-          progress={progress} 
-          downloaded={updateStats.d} 
-          total={updateStats.t} 
+        <UpdateOverlay
+          progress={progress}
+          downloaded={updateStats.d}
+          total={updateStats.t}
         />
       )}
 
       <main className="relative z-10 h-full p-10 flex flex-col justify-between pt-[60px]">
         <div className="flex justify-between items-start">
-          <ProfileSection 
+          <ProfileSection
             username={username}
             isEditing={isEditing}
             onEditToggle={setIsEditing}
@@ -385,12 +392,11 @@ const App: React.FC = () => {
             updateAvailable={!!updateAsset}
             onUpdate={handleUpdate}
           />
-
           {/* Hytale Logo - Right Side */}
           <img src={hytaleLogo} alt="Hytale" className="h-24 drop-shadow-2xl" />
         </div>
 
-        <ControlSection 
+        <ControlSection
           onPlay={handlePlay}
           onDownload={handlePlay}
           onExit={handleExit}
@@ -420,19 +426,19 @@ const App: React.FC = () => {
 
       {/* Modals */}
       {showDelete && (
-        <DeleteConfirmationModal 
-          onConfirm={() => { 
-            DeleteGame(); 
-            setShowDelete(false); 
-          }} 
-          onCancel={() => setShowDelete(false)} 
+        <DeleteConfirmationModal
+          onConfirm={() => {
+            DeleteGame();
+            setShowDelete(false);
+          }}
+          onCancel={() => setShowDelete(false)}
         />
       )}
-      
+
       {error && (
-        <ErrorModal 
-          error={error} 
-          onClose={() => setError(null)} 
+        <ErrorModal
+          error={error}
+          onClose={() => setError(null)}
         />
       )}
 

@@ -8,4 +8,3 @@ export { ErrorModal } from './ErrorModal';
 export { DeleteConfirmationModal } from './DeleteConfirmationModal';
 export { ModManager } from './ModManager';
 export { LogsModal } from './LogsModal';
-export { News } from './News';

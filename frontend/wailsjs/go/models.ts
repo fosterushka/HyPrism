@@ -448,11 +448,27 @@ export namespace mods {
 
 export namespace news {
 	
+	export class coverImage {
+	    s3Key: string;
+	
+	    static createFrom(source: any = {}) {
+	        return new coverImage(source);
+	    }
+	
+	    constructor(source: any = {}) {
+	        if ('string' === typeof source) source = JSON.parse(source);
+	        this.s3Key = source["s3Key"];
+	    }
+	}
 	export class NewsItem {
 	    title: string;
+	    bodyExcerpt: string;
 	    excerpt: string;
 	    url: string;
 	    date: string;
+	    publishedAt: string;
+	    slug: string;
+	    coverImage: coverImage;
 	    author: string;
 	    imageUrl: string;
 	
@@ -463,12 +479,34 @@ export namespace news {
 	    constructor(source: any = {}) {
 	        if ('string' === typeof source) source = JSON.parse(source);
 	        this.title = source["title"];
+	        this.bodyExcerpt = source["bodyExcerpt"];
 	        this.excerpt = source["excerpt"];
 	        this.url = source["url"];
 	        this.date = source["date"];
+	        this.publishedAt = source["publishedAt"];
+	        this.slug = source["slug"];
+	        this.coverImage = this.convertValues(source["coverImage"], coverImage);
 	        this.author = source["author"];
 	        this.imageUrl = source["imageUrl"];
 	    }
+	
+		convertValues(a: any, classs: any, asMap: boolean = false): any {
+		    if (!a) {
+		        return a;
+		    }
+		    if (a.slice && a.map) {
+		        return (a as any[]).map(elem => this.convertValues(elem, classs));
+		    } else if ("object" === typeof a) {
+		        if (asMap) {
+		            for (const key of Object.keys(a)) {
+		                a[key] = new classs(a[key]);
+		            }
+		            return a;
+		        }
+		        return new classs(a);
+		    }
+		    return a;
+		}
 	}
 
 }
