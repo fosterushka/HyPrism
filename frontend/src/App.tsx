@@ -370,10 +370,6 @@ const App: React.FC = () => {
         <MusicPlayer forceMuted={isGameRunning} />
       </div>
 
-      <div className='absolute z-20 top-32 w-full mx-auto'>
-        <NewsPreview getNews={async () => await GetNews(4)} />
-      </div>
-
       {isUpdatingLauncher && (
         <UpdateOverlay
           progress={progress}
@@ -392,8 +388,11 @@ const App: React.FC = () => {
             updateAvailable={!!updateAsset}
             onUpdate={handleUpdate}
           />
-          {/* Hytale Logo - Right Side */}
-          <img src={hytaleLogo} alt="Hytale" className="h-24 drop-shadow-2xl" />
+          {/* Hytale Logo & News - Right Side */}
+          <div className="flex flex-col items-end gap-4">
+            <img src={hytaleLogo} alt="Hytale" className="h-24 drop-shadow-2xl" />
+            <NewsPreview getNews={async () => await GetNews(4)} />
+          </div>
         </div>
 
         <ControlSection
