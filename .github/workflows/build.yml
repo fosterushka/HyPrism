@@ -611,37 +611,42 @@ jobs:
             VERSION="${GITHUB_REF#refs/tags/v}"
             IS_PRERELEASE="false"
             RELEASE_NAME="v$VERSION"
+            TAG_NAME="v$VERSION"
           elif [[ "${GITHUB_REF}" == refs/heads/nightly ]]; then
             VERSION="nightly-$(git rev-parse --short HEAD)"
             IS_PRERELEASE="true"
             RELEASE_NAME="Nightly Build $(date +'%Y-%m-%d')"
+            TAG_NAME="nightly"
           else
             VERSION="dev"
             IS_PRERELEASE="true"
             RELEASE_NAME="Development Build"
+            TAG_NAME="dev"
           fi
           echo "version=$VERSION" >> $GITHUB_OUTPUT
           echo "is_prerelease=$IS_PRERELEASE" >> $GITHUB_OUTPUT
           echo "release_name=$RELEASE_NAME" >> $GITHUB_OUTPUT
+          echo "tag_name=$TAG_NAME" >> $GITHUB_OUTPUT
       
       - name: Create version.json for auto-updater
         run: |
           VERSION="${{ steps.version.outputs.version }}"
+          TAG_NAME="${{ steps.version.outputs.tag_name }}"
           cat > artifacts/version.json << EOF
           {
             "version": "$VERSION",
             "linux": {
               "amd64": {
                 "launcher": {
-                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/v$VERSION/HyPrism-x86_64.AppImage",
+                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/$TAG_NAME/HyPrism-x86_64.AppImage",
                   "sha256": ""
                 },
                 "tarball": {
-                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/v$VERSION/HyPrism-linux-x86_64.tar.gz",
+                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/$TAG_NAME/HyPrism-linux-x86_64.tar.gz",
                   "sha256": ""
                 },
                 "flatpak": {
-                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/v$VERSION/HyPrism.flatpak",
+                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/$TAG_NAME/HyPrism.flatpak",
                   "sha256": ""
                 }
               }
@@ -649,7 +654,7 @@ jobs:
             "windows": {
               "amd64": {
                 "launcher": {
-                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/v$VERSION/HyPrism.exe",
+                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/$TAG_NAME/HyPrism.exe",
                   "sha256": ""
                 }
               }
@@ -663,7 +668,7 @@ jobs:
               },
               "arm64": {
                 "launcher": {
-                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/v$VERSION/HyPrism-macOS-arm64.dmg",
+                  "url": "https://github.com/yyyumeniku/HyPrism/releases/download/$TAG_NAME/HyPrism-macOS-arm64.dmg",
                   "sha256": ""
                 }
               }
@@ -676,7 +681,7 @@ jobs:
         with:
           files: artifacts/*
           name: ${{ steps.version.outputs.release_name }}
-          tag_name: v${{ steps.version.outputs.version }}
+          tag_name: ${{ steps.version.outputs.tag_name }}
           prerelease: ${{ steps.version.outputs.is_prerelease }}
           body: |
             ## HyPrism ${{ steps.version.outputs.release_name }}

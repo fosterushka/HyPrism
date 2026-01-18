@@ -43,7 +43,10 @@ type Asset struct {
 
 // CheckUpdate checks for launcher updates
 func CheckUpdate(ctx context.Context, current string) (*Asset, string, error) {
-	info, err := fetchUpdateInfo(ctx)
+	// Determine if this is a nightly build
+	isNightly := strings.HasPrefix(current, "nightly-")
+	
+	info, err := fetchUpdateInfo(ctx, isNightly)
 	if err != nil {
 		return nil, "", err
 	}
@@ -51,7 +54,7 @@ func CheckUpdate(ctx context.Context, current string) (*Asset, string, error) {
 	currentClean := strings.TrimPrefix(strings.TrimSpace(current), "v")
 	latestClean := strings.TrimPrefix(strings.TrimSpace(info.Version), "v")
 
-	fmt.Printf("Current version: %s, Latest version: %s\n", current, info.Version)
+	fmt.Printf("Current version: %s, Latest version: %s (nightly: %v)\n", current, info.Version, isNightly)
 
 	if currentClean == latestClean {
 		fmt.Println("Already on latest version")
@@ -82,7 +85,7 @@ func CheckUpdate(ctx context.Context, current string) (*Asset, string, error) {
 	return asset, info.Version, nil
 }
 
-func fetchUpdateInfo(ctx context.Context) (*UpdateInfo, error) {
+func fetchUpdateInfo(ctx context.Context, isNightly bool) (*UpdateInfo, error) {
 	tmpFile, err := os.CreateTemp("", "version-*.json")
 	if err != nil {
 		return nil, err
@@ -91,8 +94,8 @@ func fetchUpdateInfo(ctx context.Context) (*UpdateInfo, error) {
 	tmpFile.Close()
 	defer os.Remove(tmpPath)
 
-	// Download version.json from releases
-	err = download.DownloadLatestReleaseAsset(ctx, versionJSONAsset, tmpPath, nil)
+	// Download version.json from the appropriate release channel
+	err = download.DownloadReleaseAsset(ctx, versionJSONAsset, tmpPath, isNightly, nil)
 	if err != nil {
 		return nil, fmt.Errorf("failed to fetch update info: %w", err)
 	}

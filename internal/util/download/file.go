@@ -208,14 +208,24 @@ func CreateTempFile(pattern string) (string, error) {
 	return file.Name(), nil
 }
 
-// DownloadLatestReleaseAsset downloads an asset from the latest GitHub release
+// DownloadLatestReleaseAsset downloads an asset from the latest stable GitHub release
 func DownloadLatestReleaseAsset(ctx context.Context, assetName, dest string, callback func(stage string, progress float64, message string, currentFile string, speed string, downloaded, total int64)) error {
-	// This would fetch from GitHub releases API
-	// For now, use a direct URL pattern
+	return DownloadReleaseAsset(ctx, assetName, dest, false, callback)
+}
+
+// DownloadReleaseAsset downloads an asset from either stable release or nightly pre-release
+func DownloadReleaseAsset(ctx context.Context, assetName, dest string, isNightly bool, callback func(stage string, progress float64, message string, currentFile string, speed string, downloaded, total int64)) error {
 	owner := "yyyumeniku"
 	repo := "HyPrism"
 	
-	url := fmt.Sprintf("https://github.com/%s/%s/releases/latest/download/%s", owner, repo, assetName)
+	var url string
+	if isNightly {
+		// For nightly builds, get from the latest pre-release (tagged as nightly)
+		url = fmt.Sprintf("https://github.com/%s/%s/releases/download/nightly/%s", owner, repo, assetName)
+	} else {
+		// For stable releases, get from /releases/latest
+		url = fmt.Sprintf("https://github.com/%s/%s/releases/latest/download/%s", owner, repo, assetName)
+	}
 	
 	return DownloadWithProgress(dest, url, "download", 1.0, callback)
 }
