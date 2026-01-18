@@ -98,8 +98,15 @@ func (a *App) SelectInstanceDirectory() (string, error) {
 	
 	// Create directory if it doesn't exist
 	if err := os.MkdirAll(selectedDir, 0755); err != nil {
-		return "", fmt.Errorf("failed to create directory: %w", err)
+		return "", fmt.Errorf("failed to create directory: %w\n\nPlease ensure:\n• The drive is properly connected\n• You have write permissions\n• The path is valid", err)
 	}
+	
+	// Verify the directory is writable (important for external drives)
+	testFile := filepath.Join(selectedDir, ".hyprism-test")
+	if err := os.WriteFile(testFile, []byte("test"), 0644); err != nil {
+		return "", fmt.Errorf("directory is not writable: %w\n\nPlease check:\n• Drive is not read-only\n• You have write permissions\n• Drive has free space", err)
+	}
+	os.Remove(testFile)
 	
 	// Save to config
 	a.cfg.CustomInstanceDir = selectedDir

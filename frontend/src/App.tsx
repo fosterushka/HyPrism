@@ -317,6 +317,14 @@ const App: React.FC = () => {
       if (selectedDir) {
         console.log('Instance directory updated to:', selectedDir);
         
+        // Show info about what gets moved
+        setError({
+          type: 'INFO',
+          message: 'Instance Directory Updated',
+          technical: `Game instances will now be stored in:\n${selectedDir}\n\nNote: The following remain in AppData:\n• Java Runtime (JRE)\n• Butler tool\n• Cache files\n• Logs\n• Launcher settings\n• WebView2 (EBWebView folder)\n\nYou may need to reinstall the game if switching drives.`,
+          timestamp: new Date().toISOString()
+        });
+        
         // Reload version list and check installed versions for new directory
         setIsLoadingVersions(true);
         try {
