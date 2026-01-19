@@ -227,6 +227,21 @@ jobs:
           # Bundle ALL WebKit2GTK libraries and their dependencies
           echo "Bundling WebKit2GTK and all dependencies..."
           
+          # Bundle WebKit helper processes (CRITICAL - these are executables, not just libraries!)
+          echo "Bundling WebKit helper processes..."
+          mkdir -p HyPrism.AppDir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1
+          WEBKIT_PROCESSES="
+            /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitNetworkProcess
+            /usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/WebKitWebProcess
+          "
+          for proc in $WEBKIT_PROCESSES; do
+            if [ -f "$proc" ]; then
+              cp "$proc" HyPrism.AppDir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/
+              chmod +x HyPrism.AppDir/usr/lib/x86_64-linux-gnu/webkit2gtk-4.1/$(basename "$proc")
+              echo "Bundled: $(basename $proc)"
+            fi
+          done
+          
           # Find and copy all required libraries with their dependencies
           # Use ldd to find all dependencies of the main webkit libraries
           # Use webkit2gtk-4.1 libraries (modern, supported by all current distros)
