@@ -95,10 +95,13 @@ export const LanguageSelector: React.FC<LanguageSelectorProps> = ({
             <div ref={dropdownRef} className="relative">
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-12 h-12 rounded-xl glass border border-white/5 flex items-center justify-center text-white/60 hover:text-[#FFA845] hover:bg-[#FFA845]/10 active:scale-95 transition-all duration-150"
-                    title={i18n.t('Change Language')}
+                    className="w-12 h-12 rounded-xl glass border border-white/5 flex items-center justify-center text-white/60 hover:text-[#FFA845] hover:bg-[#FFA845]/10 active:scale-95 transition-all duration-150 relative group"
+                    title={t('Change Language')}
                 >
                     <span className="font-bold text-sm">{i18n.language.toUpperCase()}</span>
+                    <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-black/90 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+                        {t('Change Language')}
+                    </span>
                 </button>
 
                 {/* Language Dropdown */}

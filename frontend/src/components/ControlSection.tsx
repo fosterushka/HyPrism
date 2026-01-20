@@ -274,11 +274,14 @@ export const ControlSection: React.FC<ControlSectionProps> = ({
 
         <button
           onClick={openCoffee}
-          className="h-12 px-4 rounded-xl glass border border-white/5 flex items-center justify-center gap-2 text-white/60 hover:text-[#FFA845] hover:bg-[#FFA845]/10 active:scale-95 transition-all duration-150"
+          className="h-12 px-4 rounded-xl glass border border-white/5 flex items-center justify-center gap-2 text-white/60 hover:text-[#FFA845] hover:bg-[#FFA845]/10 active:scale-95 transition-all duration-150 relative group"
           title={t('Buy Me a Coffee')}
         >
           <span className="text-sm font-medium">{t('Buy me a')}</span>
           <Coffee size={20} />
+          <span className="absolute -top-10 left-1/2 -translate-x-1/2 px-2 py-1 text-xs bg-black/90 text-white rounded opacity-0 group-hover:opacity-100 transition-opacity whitespace-nowrap pointer-events-none z-50">
+            {t('Buy Me a Coffee')}
+          </span>
         </button>
 
         {/* Spacer + Disclaimer in center */}
