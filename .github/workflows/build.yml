@@ -362,6 +362,7 @@ jobs:
           cd flatpak
           
           flatpak-builder \
+            --user \
             --force-clean \
             --repo=repo \
             --install-deps-from=flathub \
