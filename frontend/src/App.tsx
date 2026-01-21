@@ -59,6 +59,7 @@ const App: React.FC = () => {
   // Modal state
   const [showDelete, setShowDelete] = useState<boolean>(false);
   const [showModManager, setShowModManager] = useState<boolean>(false);
+  const [modManagerSearchQuery, setModManagerSearchQuery] = useState<string>('');
   const [error, setError] = useState<any>(null);
 
   // Version state
@@ -450,7 +451,10 @@ const App: React.FC = () => {
           actions={{
             openFolder: OpenFolder,
             showDelete: () => setShowDelete(true),
-            showModManager: () => setShowModManager(true)
+            showModManager: (query?: string) => {
+              setModManagerSearchQuery(query || '');
+              setShowModManager(true);
+            }
           }}
         />
       </main>
@@ -478,6 +482,7 @@ const App: React.FC = () => {
           onClose={() => setShowModManager(false)}
           currentBranch={currentBranch}
           currentVersion={currentVersion}
+          initialSearchQuery={modManagerSearchQuery}
         />
       )}
     </div>

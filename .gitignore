@@ -45,3 +45,4 @@ flatpak-repo/
 flatpak-build/
 .flatpak-builder/
 *.flatpak
+frontend/package.json.md5

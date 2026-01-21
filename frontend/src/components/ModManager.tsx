@@ -68,6 +68,7 @@ interface ModManagerProps {
   onClose: () => void;
   currentBranch: string;
   currentVersion: number;
+  initialSearchQuery?: string;
 }
 
 // Confirmation Modal
@@ -122,10 +123,11 @@ export const ModManager: React.FC<ModManagerProps> = ({
   onClose,
   currentBranch,
   currentVersion,
+  initialSearchQuery = ''
 }) => {
   const { t } = useTranslation();
   // Tab state
-  const [activeTab, setActiveTab] = useState<'installed' | 'browse'>('installed');
+  const [activeTab, setActiveTab] = useState<'installed' | 'browse'>(initialSearchQuery ? 'browse' : 'installed');
 
   // Installed mods
   const [installedMods, setInstalledMods] = useState<Mod[]>([]);
@@ -140,7 +142,7 @@ export const ModManager: React.FC<ModManagerProps> = ({
   const [showUpdatesModal, setShowUpdatesModal] = useState(false);
 
   // Browse mods
-  const [searchQuery, setSearchQuery] = useState('');
+  const [searchQuery, setSearchQuery] = useState(initialSearchQuery);
   const [searchResults, setSearchResults] = useState<CurseForgeMod[]>([]);
   const [categories, setCategories] = useState<ModCategory[]>([]);
   const [selectedCategory, setSelectedCategory] = useState(0);
@@ -306,9 +308,9 @@ export const ModManager: React.FC<ModManagerProps> = ({
     }
   }, [currentPage, isLoadingMore, handleSearch]);
 
-  // Auto-load mods when switching to browse tab
+  // Auto-load mods when switching to browse tab or if we have an initial query
   useEffect(() => {
-    if (activeTab === 'browse' && searchResults.length === 0) {
+    if (activeTab === 'browse' && (searchResults.length === 0 || initialSearchQuery)) {
       handleSearch(true);
     }
   }, [activeTab]);

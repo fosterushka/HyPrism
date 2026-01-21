@@ -3,6 +3,7 @@ import { initReactI18next } from 'react-i18next';
 import { Language } from './constants/enums';
 import ru from './locales/ru.json';
 import en from './locales/en.json';
+import tr from './locales/tr.json';
 import fr from './locales/fr.json';
 
 const getSavedLanguage = (): string => {
@@ -24,6 +25,9 @@ i18n
             },
             [Language.RUSSIAN]: {
                 translation: ru,
+            },
+            [Language.TURKISH]: {
+                translation: tr,
             },
             [Language.FRENCH]: {
                 translation: fr,

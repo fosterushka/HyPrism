@@ -117,5 +117,10 @@
     "Download": "Download",
     "Failed to load logs: ": "Failed to load logs: ",
     "Failed to update launcher": "Failed to update launcher",
-    "Failed to change instance directory": "Failed to change instance directory"
+    "Failed to change instance directory": "Failed to change instance directory",
+    "Install Translation?": "Install Translation?",
+    "Would you like to search for {{lang}} translation mods?": "Would you like to search for {{lang}} translation mods?",
+    "Yes, search": "Yes, search",
+    "No": "No",
+    "Don't ask again": "Don't ask again"
 }

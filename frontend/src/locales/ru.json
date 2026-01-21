@@ -117,5 +117,10 @@
     "Copy": "Копировать",
     "Failed to load logs: ": "Ошибка загрузки логов: ",
     "Failed to update launcher": "Не удалось обновить лаунчер",
-    "Failed to change instance directory": "Не удалось изменить папку инстанса"
+    "Failed to change instance directory": "Не удалось изменить папку инстанса",
+    "Install Translation?": "Установить перевод?",
+    "Would you like to search for {{lang}} translation mods?": "Хотите найти моды перевода для {{lang}}?",
+    "No": "Нет",
+    "Yes, search": "Да, искать",
+    "Don't ask again": "Больше не спрашивать"
 }
