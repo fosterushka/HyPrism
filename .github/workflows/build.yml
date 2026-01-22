@@ -65,7 +65,9 @@ jobs:
             VERSION="nightly-$(git rev-parse --short HEAD)"
             APP_TITLE="HyPrism Nightly - Hytale Launcher"
           elif [[ "${GITHUB_REF}" == refs/heads/main ]]; then
-            VERSION="dev-main"
+            # For main branch without tag, get latest version from git tags
+            LATEST_TAG=$(git describe --tags --abbrev=0 2>/dev/null || echo "v1.0.0")
+            VERSION="${LATEST_TAG#v}-dev"
             APP_TITLE="HyPrism Dev - Hytale Launcher"
           else
             VERSION="dev"
@@ -94,6 +96,17 @@ jobs:
         run: |
           # Install create-dmg
           brew install create-dmg
+          
+          # Sign the app bundle BEFORE creating DMG
+          echo "Signing HyPrism.app..."
+          # Remove quarantine attributes
+          xattr -cr build/bin/HyPrism.app || true
+          # Ad-hoc sign the app bundle
+          codesign --force --deep --sign - build/bin/HyPrism.app || {
+            echo "Warning: Codesign failed, trying without deep flag..."
+            codesign --force --sign - build/bin/HyPrism.app || true
+          }
+          echo "App signed successfully"
           
           # Create a clean directory for DMG contents
           mkdir -p dmg-contents
