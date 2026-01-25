@@ -1,0 +1,233 @@
+name: Build (No Release)
+
+on:
+  workflow_dispatch:
+
+env:
+  DOTNET_VERSION: '8.0.x'
+  NODE_VERSION: '20'
+
+jobs:
+  build-linux:
+    runs-on: ubuntu-22.04
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Install Linux dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y ruby ruby-dev build-essential rpm libfuse2
+          sudo gem install --no-document fpm
+
+      - name: Install appimagetool
+        run: |
+          curl -fsSL -o /tmp/appimagetool "https://github.com/AppImage/AppImageKit/releases/download/continuous/appimagetool-x86_64.AppImage"
+          chmod +x /tmp/appimagetool
+          sudo mv /tmp/appimagetool /usr/local/bin/appimagetool
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Build Linux x64
+        run: |
+          dotnet restore
+          dotnet publish -c Release -r linux-x64 --self-contained true \
+            /p:PublishSingleFile=true /p:PublishReadyToRun=true \
+            /p:IncludeNativeLibrariesForSelfExtract=true \
+            -o artifacts/linux-x64
+
+      - name: Build Linux arm64
+        run: |
+          dotnet publish -c Release -r linux-arm64 --self-contained true \
+            /p:PublishSingleFile=true /p:PublishReadyToRun=true \
+            /p:IncludeNativeLibrariesForSelfExtract=true \
+            -o artifacts/linux-arm64
+
+      - name: Create tar.gz archives
+        run: |
+          cd artifacts/linux-x64 && tar -czf ../HyPrism-linux-x64.tar.gz . && cd ../..
+          cd artifacts/linux-arm64 && tar -czf ../HyPrism-linux-arm64.tar.gz . && cd ../..
+
+      - name: Create .deb package
+        run: |
+          mkdir -p pkg/opt/hyprism pkg/usr/bin pkg/usr/share/applications pkg/usr/share/icons/hicolor/256x256/apps
+          cp -R artifacts/linux-x64/* pkg/opt/hyprism/
+          chmod +x pkg/opt/hyprism/HyPrism
+          ln -sf /opt/hyprism/HyPrism pkg/usr/bin/hyprism
+          ln -sf /opt/hyprism/HyPrism pkg/usr/bin/HyPrism
+          cp packaging/flatpak/dev.hyprism.HyPrism.desktop pkg/usr/share/applications/ || true
+          cp packaging/flatpak/dev.hyprism.HyPrism.png pkg/usr/share/icons/hicolor/256x256/apps/ || true
+          fpm -s dir -t deb -n hyprism -v 0.0.0 -C pkg \
+            --description "HyPrism - Hytale Launcher" \
+            --url "https://github.com/HyPrism/HyPrism" \
+            -p artifacts/HyPrism-linux-x64.deb .
+
+      - name: Create .rpm package
+        run: |
+          fpm -s dir -t rpm -n hyprism -v 0.0.0 -C pkg \
+            --description "HyPrism - Hytale Launcher" \
+            --url "https://github.com/HyPrism/HyPrism" \
+            -p artifacts/HyPrism-linux-x64.rpm .
+
+      - name: Create AppImage
+        run: |
+          mkdir -p AppDir/usr/bin AppDir/usr/lib/hyprism AppDir/usr/share/applications AppDir/usr/share/icons/hicolor/256x256/apps
+          cp -R artifacts/linux-x64/* AppDir/usr/lib/hyprism/
+          chmod +x AppDir/usr/lib/hyprism/HyPrism
+          ln -sf ../lib/hyprism/HyPrism AppDir/usr/bin/HyPrism
+          cp packaging/flatpak/dev.hyprism.HyPrism.desktop AppDir/usr/share/applications/ || true
+          cp packaging/flatpak/dev.hyprism.HyPrism.png AppDir/usr/share/icons/hicolor/256x256/apps/ || true
+          cp packaging/flatpak/dev.hyprism.HyPrism.png AppDir/ || true
+          cat > AppDir/AppRun << 'EOF'
+          #!/bin/sh
+          exec "$(dirname "$0")/usr/lib/hyprism/HyPrism" "$@"
+          EOF
+          chmod +x AppDir/AppRun
+          ln -sf usr/share/applications/dev.hyprism.HyPrism.desktop AppDir/HyPrism.desktop || true
+          ARCH=x86_64 appimagetool -n AppDir artifacts/HyPrism-linux-x64.AppImage
+
+      - name: Upload Linux artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: linux-builds
+          path: |
+            artifacts/HyPrism-linux-x64.tar.gz
+            artifacts/HyPrism-linux-arm64.tar.gz
+            artifacts/HyPrism-linux-x64.deb
+            artifacts/HyPrism-linux-x64.rpm
+            artifacts/HyPrism-linux-x64.AppImage
+
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Build Windows x64
+        run: |
+          dotnet restore
+          dotnet publish -c Release -r win-x64 --self-contained true `
+            /p:PublishSingleFile=true /p:PublishReadyToRun=true `
+            /p:IncludeNativeLibrariesForSelfExtract=true `
+            -o artifacts/win-x64
+
+      - name: Create Windows zip
+        run: |
+          Compress-Archive -Path artifacts/win-x64/* -DestinationPath artifacts/HyPrism-windows-x64.zip
+
+      - name: Upload Windows artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-builds
+          path: artifacts/HyPrism-windows-x64.zip
+
+  build-macos:
+    runs-on: macos-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup .NET
+        uses: actions/setup-dotnet@v4
+        with:
+          dotnet-version: ${{ env.DOTNET_VERSION }}
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: ${{ env.NODE_VERSION }}
+
+      - name: Build frontend
+        run: |
+          cd frontend
+          npm ci
+          npm run build
+
+      - name: Build macOS x64
+        run: |
+          dotnet restore
+          dotnet publish -c Release -r osx-x64 --self-contained true \
+            /p:PublishSingleFile=true /p:PublishReadyToRun=true \
+            /p:IncludeNativeLibrariesForSelfExtract=true \
+            -o artifacts/osx-x64
+
+      - name: Build macOS arm64
+        run: |
+          dotnet publish -c Release -r osx-arm64 --self-contained true \
+            /p:PublishSingleFile=true /p:PublishReadyToRun=true \
+            /p:IncludeNativeLibrariesForSelfExtract=true \
+            -o artifacts/osx-arm64
+
+      - name: Create macOS app bundles
+        run: |
+          mkdir -p "artifacts/HyPrism-x64.app/Contents/MacOS"
+          mkdir -p "artifacts/HyPrism-x64.app/Contents/Resources"
+          cp artifacts/osx-x64/HyPrism "artifacts/HyPrism-x64.app/Contents/MacOS/"
+          cp artifacts/osx-x64/Photino.Native.dylib "artifacts/HyPrism-x64.app/Contents/MacOS/" || true
+          cp -R artifacts/osx-x64/wwwroot "artifacts/HyPrism-x64.app/Contents/Resources/"
+          cp artifacts/osx-x64/jre.json "artifacts/HyPrism-x64.app/Contents/Resources/" || true
+          cp packaging/macos/Info.plist "artifacts/HyPrism-x64.app/Contents/"
+          cp packaging/macos/HyPrism.icns "artifacts/HyPrism-x64.app/Contents/Resources/"
+          chmod +x "artifacts/HyPrism-x64.app/Contents/MacOS/HyPrism"
+
+          mkdir -p "artifacts/HyPrism-arm64.app/Contents/MacOS"
+          mkdir -p "artifacts/HyPrism-arm64.app/Contents/Resources"
+          cp artifacts/osx-arm64/HyPrism "artifacts/HyPrism-arm64.app/Contents/MacOS/"
+          cp artifacts/osx-arm64/Photino.Native.dylib "artifacts/HyPrism-arm64.app/Contents/MacOS/" || true
+          cp -R artifacts/osx-arm64/wwwroot "artifacts/HyPrism-arm64.app/Contents/Resources/"
+          cp artifacts/osx-arm64/jre.json "artifacts/HyPrism-arm64.app/Contents/Resources/" || true
+          cp packaging/macos/Info.plist "artifacts/HyPrism-arm64.app/Contents/"
+          cp packaging/macos/HyPrism.icns "artifacts/HyPrism-arm64.app/Contents/Resources/"
+          chmod +x "artifacts/HyPrism-arm64.app/Contents/MacOS/HyPrism"
+
+      - name: Sign macOS apps (ad-hoc)
+        run: |
+          codesign --force --deep --sign - "artifacts/HyPrism-x64.app"
+          codesign --force --deep --sign - "artifacts/HyPrism-arm64.app"
+
+      - name: Create DMG files
+        run: |
+          mkdir -p dmg-x64
+          cp -R "artifacts/HyPrism-x64.app" "dmg-x64/HyPrism.app"
+          ln -s /Applications dmg-x64/Applications
+          hdiutil create -volname "HyPrism" -srcfolder dmg-x64 -ov -format UDZO artifacts/HyPrism-macos-x64.dmg
+
+          mkdir -p dmg-arm64
+          cp -R "artifacts/HyPrism-arm64.app" "dmg-arm64/HyPrism.app"
+          ln -s /Applications dmg-arm64/Applications
+          hdiutil create -volname "HyPrism" -srcfolder dmg-arm64 -ov -format UDZO artifacts/HyPrism-macos-arm64.dmg
+
+      - name: Upload macOS artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: macos-builds
+          path: |
+            artifacts/HyPrism-macos-x64.dmg
+            artifacts/HyPrism-macos-arm64.dmg
